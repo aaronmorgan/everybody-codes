@@ -30,15 +30,17 @@ public class Quest1
     }
 
     [Theory]
-    [InlineData("Quest1_Part2_Test1.txt", 28)]
-    [InlineData("Quest1_Part2.txt", 5615)]
-    public void Day1_Part2_TheBattleForTheFarmlands(string filename, int expectedAnswer)
+    [InlineData("Quest1_Part2_Test1.txt", 2, 28)]
+    [InlineData("Quest1_Part2.txt", 2, 5615)]
+    [InlineData("Quest1_Part3_Test1.txt", 3, 30)]
+    [InlineData("Quest1_Part3.txt", 3, 28032)]
+    public void Day1_Part2_Part3_TheBattleForTheFarmlands(string filename, int size, int expectedAnswer)
     {
-        var attackWaves = InputParser.ReadAllText("2024/" + filename).Chunk(2).ToList();
+        var attackWaves = InputParser.ReadAllText("2024/" + filename).Chunk(size).ToList();
 
         int result = 0;
 
-        var b = new Dictionary<char, int>
+        var damageTable = new Dictionary<char, int>
         {
             { 'A', 0 },
             { 'B', 1 },
@@ -49,14 +51,40 @@ public class Quest1
 
         foreach (var monsters in attackWaves)
         {
-            bool applyModififer = !(monsters[0] is 'x' || monsters[1] is 'x');
+            // Apply base damage with no modifier.
+            result += damageTable[monsters[0]];
+            result += damageTable[monsters[1]];
 
-            result += b[monsters[0]];
-            result += b[monsters[1]];
+            if (size == 3) result += damageTable[monsters[2]];
 
-            if (applyModififer)
+            // Identifier the number of 'x' in the wave, if there's only one monster per wave no modifier is applied.
+            var countEmptySpaces = 0;
+            for (var i = 0; i < monsters.Length; i++)
             {
-                result += 2;
+                if (monsters[i] == 'x') countEmptySpaces++;
+            }
+
+            var applyModififer = size switch
+            {
+                2 => countEmptySpaces == 0,
+                3 => countEmptySpaces <= 1,
+                _ => false
+            };
+
+            if (!applyModififer) continue;
+            
+            if (size == 2) result += 2;
+            else
+            {
+                switch (countEmptySpaces)
+                {
+                    case 0:
+                        result += 6;
+                        break;
+                    case 1:
+                        result += 2;
+                        break;
+                }
             }
         }
 
